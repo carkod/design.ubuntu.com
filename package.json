@@ -1,18 +1,22 @@
 {
   "scripts": {
+    "start": "yarn run build && concurrently --kill-others --raw 'yarn run watch-css' 'yarn run watch-js' 'yarn run serve'",
     "lint-nginx": "gixy nginx.conf",
-    "lint-scss": "sass-lint _sass/**/*.scss --verbose --no-exit",
+    "lint-scss": "sass-lint sass/**/*.scss --verbose --no-exit",
     "test": "yarn run lint-nginx && yarn run lint-scss",
-    "watch": "watch -p '_sass/**/*.scss' -c 'yarn run build'",
-    "build-css": "node-sass --include-path node_modules sass --source-map true --output-style compressed --output css && postcss --use autoprefixer --replace css/**/*.css",
-    "build-jekyll": "bundle exec jekyll build",
-    "build": "yarn run build-css && yarn run copy-js && yarn run build-jekyll",
-    "copy-js": "cp node_modules/@canonical/global-nav/dist/global-nav.js assets/global-nav.js",
-    "serve": "bundle exec jekyll serve -P ${PORT} -H 0.0.0.0",
-    "clean": "rm -rf node_modules yarn-error.log css css *.log *.sqlite _site/ build/ .jekyll-metadata .bundle"
+    "build": "yarn run build-css && yarn run build-js && yarn run build-site",
+    "build-site": "eleventy --formats=html,scss,css,js,md,svg --input=src --output=_site",
+    "build-css": "node-sass --include-path node_modules src/sass --source-map true --output-style compressed --output src/css && postcss --use autoprefixer --replace 'src/css/**/*.css'",
+    "build-js": "mkdir -p src/js/build/ && cp node_modules/@canonical/global-nav/dist/global-nav.js src/js/build/",
+    "watch-css": "watch -p 'src/sass/**/*.scss' -p 'js/' -c 'yarn run build-css'",
+    "watch-js": "watch -p 'node_modules/global-nav/dist/index.js' -c 'yarn run build-js'",
+    "serve": "eleventy --formats=html,scss,css,js,md,svg --input=src --output=_site --watch --serve --port $PORT",
+    "clean": "rm -rf node_modules yarn-error.log css css *.log _site/ build/"
   },
   "devDependencies": {
+    "@11ty/eleventy": "0.11.0",
     "autoprefixer": "9.8.0",
+    "concurrently": "5.2.0",
     "node-sass": "4.14.1",
     "postcss-cli": "7.1.1",
     "sass-lint": "1.13.1",
@@ -20,6 +24,7 @@
   },
   "dependencies": {
     "@canonical/global-nav": "2.4.1",
+    "js-yaml": "3.14.0",
     "vanilla-framework": "2.12.1"
   }
 }
